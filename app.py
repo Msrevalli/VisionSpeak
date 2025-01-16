@@ -152,7 +152,7 @@ class VisionSpeakApp:
 
     def run(self):
         """Run the Streamlit application."""
-        st.title("VisionSpeak: Image Description for the Visually Impaired")
+        st.title("VisionSpeak: Image Description for the Visually Impaired by Sreevalli")
         
         # Add app description and instructions
         st.markdown("""
