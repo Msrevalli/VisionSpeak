@@ -18,23 +18,23 @@ def image_to_data_url(image):
     img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')  # Convert to base64
     return f"data:image/jpeg;base64,{img_base64}"  # Create data URL
 
-# Function to generate audio from text
-def generate_audio(text, language="en"):
+# Function to generate audio from text using OpenAI's TTS model
+def generate_audio(text, language="en", voice="alloy"):
     client = OpenAI()
-    completion = client.chat.completions.create(
-        model="gpt-4o-audio-preview",  # Use the latest GPT-4 model
-        modalities=["text", "audio"],
-        audio={"voice": "alloy", "format": "wav"},
-        messages=[
-            {
-                "role": "user",
-                "content": text
-            }
-        ]
-    )
-    # Decode the audio data
-    wav_bytes = base64.b64decode(completion.choices[0].message.audio.data)
-    return wav_bytes
+    try:
+        # Use OpenAI's TTS model to generate audio
+        response = client.audio.speech.create(
+            model="tts-1",  # Use the TTS model
+            voice=voice,  # Choose a voice (alloy, echo, fable, onyx, nova, shimmer)
+            input=text,
+        )
+        # Save the audio to a temporary file
+        audio_file = f"description_{language}.mp3"
+        response.stream_to_file(audio_file)
+        return audio_file
+    except Exception as e:
+        st.error(f"Error generating audio: {e}")
+        return None
 
 # Main app logic
 def main():
@@ -55,8 +55,15 @@ def main():
     }
     audio_language_code = language_map[audio_language]
 
+    # Add a voice selection dropdown for audio
+    voice = st.selectbox(
+        "Select Voice",
+        options=["alloy", "echo", "fable", "onyx", "nova", "shimmer"],
+        index=0,
+    )
+
     # Use Streamlit's camera input to capture an image
-    st.write("Capture an image and VisionSpeak will describe it for you.")
+    st.write("Capture an image using your selected camera, and VisionSpeak will describe it for you.")
     captured_image = st.camera_input("Take a picture")
 
     # If an image is captured
@@ -72,7 +79,7 @@ def main():
 
         # Send the image to OpenAI GPT-4 for description (in English)
         response = client.chat.completions.create(
-            model="gpt-4o",  # Use the latest GPT-4 model
+            model="gpt-4-turbo",  # Use the latest GPT-4 model
             messages=[
                 {
                     "role": "system",
@@ -110,10 +117,11 @@ def main():
 
         # Generate audio from the description in the selected language
         st.write("**Audio Description:**")
-        audio_bytes = generate_audio(description, audio_language_code)
+        audio_file = generate_audio(description, audio_language_code, voice)
 
         # Play the audio in the app
-        st.audio(audio_bytes, format="audio/wav")
+        if audio_file:
+            st.audio(audio_file, format="audio/mp3")
 
 # Run the app
 if __name__ == "__main__":
