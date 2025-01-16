@@ -18,58 +18,111 @@ def image_to_data_url(image):
     img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')  # Convert to base64
     return f"data:image/jpeg;base64,{img_base64}"  # Create data URL
 
-# Main app logic
-def main():
-    # Use Streamlit's camera input to capture an image
-    st.write("Capture an image using your camera, and VisionSpeak will describe it for you.")
-    captured_image = st.camera_input("Take a picture")
+# JavaScript to switch between front and back camera
+camera_js = """
+<script>
+async function switchCamera(stream, facingMode) {
+    const constraints = {
+        video: { facingMode: facingMode }
+    };
+    const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+    const videoTrack = newStream.getVideoTracks()[0];
+    stream.getVideoTracks().forEach(track => track.stop());
+    stream.addTrack(videoTrack);
+    return stream;
+}
 
-    # If an image is captured
-    if captured_image is not None:
-        # Convert the image to a PIL Image object
-        image = Image.open(captured_image)
+async function initCamera(facingMode) {
+    const constraints = {
+        video: { facingMode: facingMode }
+    };
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    const videoElement = document.createElement('video');
+    videoElement.srcObject = stream;
+    videoElement.autoplay = true;
+    document.body.appendChild(videoElement);
+    return stream;
+}
 
-       
+function sendCameraSelection(facingMode) {
+    const data = { facingMode: facingMode };
+    window.parent.postMessage(data, '*');
+}
 
-        # Convert the image to a base64 data URL
-        image_data_url = image_to_data_url(image)
+document.addEventListener('DOMContentLoaded', () => {
+    const radioButtons = document.querySelectorAll('input[name="camera"]');
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', (event) => {
+            const facingMode = event.target.value;
+            sendCameraSelection(facingMode);
+        });
+    });
+});
+</script>
+"""
 
-        # Initialize the OpenAI client
-        client = OpenAI()
+# Inject JavaScript into the app
+st.components.v1.html(camera_js, height=0)
 
-        # Send the image to OpenAI GPT-4 for description
-        response = client.chat.completions.create(
-            model="gpt-4o",  # Use GPT-4 Vision model
-            messages=[
-                {
-                    "role": "system",
-                    "content": """
-                    You are an assistant that describes images in detail for visually impaired users. 
-                    Your descriptions should be clear, concise, and focus on the most important elements of the image. 
-                    Include details about objects, people, actions, colors, and the overall scene. 
-                    If the image contains text, read it aloud. 
-                    Provide context and explanations where necessary.
-                    """
-                },
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Please describe this image in detail for a visually impaired user."},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": image_data_url,  # Use the data URL of the captured image
-                            },
+# Add radio buttons for camera selection
+camera_option = st.radio(
+    "Select Camera",
+    options=["Front Camera", "Back Camera"],
+    index=0,  # Default to front camera
+    key="camera"
+)
+
+# Determine the facing mode based on the selected camera
+facing_mode = "user" if camera_option == "Front Camera" else "environment"
+
+# Use Streamlit's camera input to capture an image
+st.write("Capture an image using your selected camera, and VisionSpeak will describe it for you.")
+captured_image = st.camera_input("Take a picture", key=facing_mode)
+
+# If an image is captured
+if captured_image is not None:
+    # Convert the image to a PIL Image object
+    image = Image.open(captured_image)
+
+    # Convert the image to a base64 data URL
+    image_data_url = image_to_data_url(image)
+
+    # Initialize the OpenAI client
+    client = OpenAI()
+
+    # Send the image to OpenAI GPT-4 for description
+    response = client.chat.completions.create(
+        model="gpt-4o",  # Use GPT-4 Vision model
+        messages=[
+            {
+                "role": "system",
+                "content": """
+                You are an assistant that describes images in detail for visually impaired users. 
+                Your descriptions should be clear, concise, and focus on the most important elements of the image. 
+                Include details about objects, people, actions, colors, and the overall scene. 
+                If the image contains text, read it aloud. 
+                Provide context and explanations where necessary.
+                """
+            },
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Please describe this image in detail for a visually impaired user."},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": image_data_url,  # Use the data URL of the captured image
                         },
-                    ],
-                }
-            ],
-            max_tokens=1000,  # Limit the response length
-        )
+                    },
+                ],
+            }
+        ],
+        max_tokens=1000,  # Limit the response length
+    )
 
-        # Display the response content in the app
-        st.write("**Description:**")
-        st.write(response.choices[0].message.content)
+    # Display the response content in the app
+    st.write("**Description:**")
+    st.write(response.choices[0].message.content)
 
 # Run the app
 if __name__ == "__main__":
