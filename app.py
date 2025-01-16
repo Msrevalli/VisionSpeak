@@ -18,11 +18,27 @@ def image_to_data_url(image):
     img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')  # Convert to base64
     return f"data:image/jpeg;base64,{img_base64}"  # Create data URL
 
+# Function to generate audio from text
+def generate_audio(text):
+    client = OpenAI()
+    completion = client.chat.completions.create(
+        model="gpt-4o-audio-preview",
+        modalities=["text", "audio"],
+        audio={"voice": "alloy", "format": "wav"},
+        messages=[
+            {
+                "role": "user",
+                "content": text
+            }
+        ]
+    )
+    # Decode the audio data
+    wav_bytes = base64.b64decode(completion.choices[0].message.audio.data)
+    return wav_bytes
+
 # Main app logic
 def main():
     
-
-
 
     # Use Streamlit's camera input to capture an image
     st.write("Capture an image using your selected camera, and VisionSpeak will describe it for you.")
@@ -41,7 +57,7 @@ def main():
 
         # Send the image to OpenAI GPT-4 for description
         response = client.chat.completions.create(
-            model="gpt-4o",  # Use GPT-4 Vision model
+            model="gpt-4-vision-preview",  # Use GPT-4 Vision model
             messages=[
                 {
                     "role": "system",
@@ -69,9 +85,19 @@ def main():
             max_tokens=1000,  # Limit the response length
         )
 
+        # Get the description from the response
+        description = response.choices[0].message.content
+
         # Display the response content in the app
         st.write("**Description:**")
-        st.write(response.choices[0].message.content)
+        st.write(description)
+
+        # Generate audio from the description
+        st.write("**Audio Description:**")
+        audio_bytes = generate_audio(description)
+
+        # Play the audio in the app
+        st.audio(audio_bytes, format="audio/wav")
 
 # Run the app
 if __name__ == "__main__":
