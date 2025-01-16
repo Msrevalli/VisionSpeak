@@ -114,7 +114,7 @@ class VisionSpeakApp:
         """Get image description from OpenAI GPT-4 Vision."""
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4-vision-preview",
+                model="gpt-4o",
                 messages=[
                     {
                         "role": "system",
