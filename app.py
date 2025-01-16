@@ -3,6 +3,7 @@ from openai import OpenAI
 from PIL import Image
 import base64
 import io
+import os
 
 # Set OpenAI API key from Streamlit secrets
 os.environ["OPENAI_API_KEY"] = st.secrets['OPENAI_API_KEY']
