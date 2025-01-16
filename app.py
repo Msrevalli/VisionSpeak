@@ -23,6 +23,7 @@ def generate_audio(text, language="en"):
     client = OpenAI()
     completion = client.chat.completions.create(
         model="gpt-4o-audio-preview",  # Use the latest GPT-4 model
+        modalities=["text", "audio"],
         messages=[
             {
                 "role": "user",
