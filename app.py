@@ -26,7 +26,7 @@ def generate_audio(text, language="en", voice="alloy"):
         response = client.audio.speech.create(
             model="tts-1",  # Use the TTS model
             voice=voice,  # Choose a voice (alloy, echo, fable, onyx, nova, shimmer)
-            input=text,
+            input=text+"in"+language,
         )
         # Save the audio to a temporary file
         audio_file = f"description_{language}.mp3"
