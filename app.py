@@ -29,8 +29,7 @@ def main():
         # Convert the image to a PIL Image object
         image = Image.open(captured_image)
 
-        # Display the captured image (optional, for sighted users or debugging)
-        st.image(image, caption="Captured Image", use_column_width=True)
+       
 
         # Convert the image to a base64 data URL
         image_data_url = image_to_data_url(image)
