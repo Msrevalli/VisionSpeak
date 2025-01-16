@@ -20,16 +20,9 @@ def image_to_data_url(image):
 
 # Main app logic
 def main():
-    # Add radio buttons for camera selection
-    camera_option = st.radio(
-        "Select Camera",
-        options=["Front Camera", "Back Camera"],
-        index=0,  # Default to front camera
-        key="camera"
-    )
+    
 
-    # Determine the facing mode based on the selected camera
-    facing_mode = "user" if camera_option == "Front Camera" else "environment"
+
 
     # Use Streamlit's camera input to capture an image
     st.write("Capture an image using your selected camera, and VisionSpeak will describe it for you.")
