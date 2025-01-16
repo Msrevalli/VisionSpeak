@@ -7,7 +7,7 @@ import os
 from typing import Optional
 import logging
 from pathlib import Path
-from googletrans import Translator
+from translate import Translator
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,7 +18,6 @@ class VisionSpeakApp:
         # Set OpenAI API key from Streamlit secrets
         self.api_key = self._set_api_key()
         self.client = OpenAI()
-        self.translator = Translator()
         
         # Define supported languages and voices
         self.LANGUAGES = {
@@ -61,11 +60,18 @@ class VisionSpeakApp:
             if target_language == "en":
                 return text
             
-            translation = self.translator.translate(
-                text,
-                dest=target_language
-            )
-            return translation.text
+            # Initialize translator for target language
+            translator = Translator(to_lang=target_language)
+            
+            # Split text into smaller chunks (translator has a length limit)
+            chunks = [text[i:i+500] for i in range(0, len(text), 500)]
+            
+            # Translate each chunk and combine
+            translated_chunks = [translator.translate(chunk) for chunk in chunks]
+            translated_text = ' '.join(translated_chunks)
+            
+            return translated_text
+            
         except Exception as e:
             logger.error(f"Translation error: {e}")
             st.warning(f"Translation failed. Falling back to English. Error: {str(e)}")
