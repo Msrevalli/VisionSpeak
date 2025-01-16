@@ -19,12 +19,10 @@ def image_to_data_url(image):
     return f"data:image/jpeg;base64,{img_base64}"  # Create data URL
 
 # Function to generate audio from text
-def generate_audio(text):
+def generate_audio(text, language="en"):
     client = OpenAI()
     completion = client.chat.completions.create(
-        model="gpt-4o-audio-preview",
-        modalities=["text", "audio"],
-        audio={"voice": "alloy", "format": "wav"},
+        model="gpt-4o-audio-preview",  # Use the latest GPT-4 model
         messages=[
             {
                 "role": "user",
@@ -38,10 +36,25 @@ def generate_audio(text):
 
 # Main app logic
 def main():
-    
+    # Add a language selection dropdown for audio
+    audio_language = st.selectbox(
+        "Select Audio Language",
+        options=["English", "Telugu", "Tamil", "Kannada", "Hindi"],
+        index=0,
+    )
+
+    # Map language selection to language codes
+    language_map = {
+        "English": "en",
+        "Telugu": "te",
+        "Tamil": "ta",
+        "Kannada": "kn",
+        "Hindi": "hi",
+    }
+    audio_language_code = language_map[audio_language]
 
     # Use Streamlit's camera input to capture an image
-    st.write("Capture an image using your selected camera, and VisionSpeak will describe it for you.")
+    st.write("Capture an image and VisionSpeak will describe it for you.")
     captured_image = st.camera_input("Take a picture")
 
     # If an image is captured
@@ -55,9 +68,9 @@ def main():
         # Initialize the OpenAI client
         client = OpenAI()
 
-        # Send the image to OpenAI GPT-4 for description
+        # Send the image to OpenAI GPT-4 for description (in English)
         response = client.chat.completions.create(
-            model="gpt-4o",  # Use GPT-4 Vision model
+            model="gpt-4o",  # Use the latest GPT-4 model
             messages=[
                 {
                     "role": "system",
@@ -67,6 +80,7 @@ def main():
                     Include details about objects, people, actions, colors, and the overall scene. 
                     If the image contains text, read it aloud. 
                     Provide context and explanations where necessary.
+                    Respond in English.
                     """
                 },
                 {
@@ -92,9 +106,9 @@ def main():
         st.write("**Description:**")
         st.write(description)
 
-        # Generate audio from the description
+        # Generate audio from the description in the selected language
         st.write("**Audio Description:**")
-        audio_bytes = generate_audio(description)
+        audio_bytes = generate_audio(description, audio_language_code)
 
         # Play the audio in the app
         st.audio(audio_bytes, format="audio/wav")
