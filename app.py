@@ -26,7 +26,7 @@ def main():
 
     # Use Streamlit's camera input to capture an image
     st.write("Capture an image using your selected camera, and VisionSpeak will describe it for you.")
-    captured_image = st.camera_input("Take a picture", key=facing_mode)
+    captured_image = st.camera_input("Take a picture")
 
     # If an image is captured
     if captured_image is not None:
