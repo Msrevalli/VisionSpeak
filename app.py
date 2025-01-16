@@ -40,7 +40,7 @@ def main():
 
         # Send the image to OpenAI GPT-4 for description
         response = client.chat.completions.create(
-            model="gpt-4-vision-preview",  # Use GPT-4 Vision model
+            model="gpt-4o",  # Use GPT-4 Vision model
             messages=[
                 {
                     "role": "system",
