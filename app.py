@@ -24,6 +24,7 @@ def generate_audio(text, language="en"):
     completion = client.chat.completions.create(
         model="gpt-4o-audio-preview",  # Use the latest GPT-4 model
         modalities=["text", "audio"],
+        audio={"voice": "alloy", "format": "wav"},
         messages=[
             {
                 "role": "user",
