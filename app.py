@@ -13,14 +13,13 @@ logger = logging.getLogger(__name__)
 
 class VisionSpeakApp:
     def __init__(self):
-        # User inputs API key manually
-        self.api_key = st.text_input("Enter your OpenAI API Key:", type="password")
-        
-        if self.api_key:
-            self.client = OpenAI(api_key=self.api_key)
-        else:
-            self.client = None  # No API key entered yet
-        
+        # Initialize session state for API key
+        if "api_key" not in st.session_state:
+            st.session_state.api_key = ""
+
+        self.api_key = st.session_state.api_key
+        self.client = None  # Initialize without API key
+
         # Define supported languages and voices
         self.LANGUAGES = {
             "English": "en",
@@ -39,7 +38,7 @@ class VisionSpeakApp:
         }
         
         self.VOICES = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
-        
+
         # Create directory for audio files if it doesn't exist
         self.audio_dir = Path("audio_files")
         self.audio_dir.mkdir(exist_ok=True)
@@ -127,6 +126,14 @@ class VisionSpeakApp:
         3. Capture an image using your camera.
         4. Get a detailed description and audio feedback.
         """)
+
+        # API Key Input Field
+        st.session_state.api_key = st.text_input("Enter your OpenAI API Key:", type="password")
+
+        # Update API Key and Initialize OpenAI Client
+        if st.session_state.api_key:
+            self.api_key = st.session_state.api_key
+            self.client = OpenAI(api_key=self.api_key)  # Initialize OpenAI client
 
         if not self.api_key:
             st.warning("Please enter your OpenAI API key to proceed.")
